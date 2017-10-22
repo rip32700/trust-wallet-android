@@ -26,9 +26,25 @@ import javax.crypto.spec.SecretKeySpec;
 
 /**
  * Password Manager that should assist
- * in securely handling the user's password.
+ * in securely handling the user's password
+ * for several wallet addresses.
  *
  * Created by Philipp Rieger on 21.10.17.
+ *
+ * ===================
+ * Example of Usage:
+ * ===================
+ *
+ * try {
+ *      PasswordManager.setPassword("0x885758292fstwe", "s3cret", this);
+ *      PasswordManager.setPassword("0x885710dsfe2345", "t0ps3cret", this);
+ *
+ *      Log.d("TAG", PasswordManager.getPassword("0x885758292fstwe", this));
+ *      Log.d("TAG", PasswordManager.getPassword("0x885710dsfe2345", this));
+ *
+ * } catch (Exception e) { e.printStackTrace(); }
+ *
+ *
  */
 
 public final class PasswordManager {
@@ -66,7 +82,7 @@ public final class PasswordManager {
      * @throws InvalidKeySpecException
      * @throws InvalidAlgorithmParameterException
      */
-    public static void setPassword(final String password, final Context context)
+    public static void setPassword(final String address, final String password, final Context context)
             throws NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException,
             IllegalBlockSizeException, UnsupportedEncodingException, InvalidKeyException,
             InvalidKeySpecException, InvalidAlgorithmParameterException
@@ -79,7 +95,7 @@ public final class PasswordManager {
         // save in shared preferences
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("password", Base64.encodeToString(encryptedPassword, Base64.DEFAULT));
+        editor.putString(address + "-pwd", Base64.encodeToString(encryptedPassword, Base64.DEFAULT));
         editor.commit();
     }
 
@@ -96,14 +112,14 @@ public final class PasswordManager {
      * @throws InvalidKeySpecException
      * @throws InvalidAlgorithmParameterException
      */
-    public static String getPassword(final Context context)
+    public static String getPassword(final String address, final Context context)
             throws NoSuchPaddingException, UnsupportedEncodingException, NoSuchAlgorithmException,
             IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidKeySpecException,
             InvalidAlgorithmParameterException
     {
         // get password from SharedPrefs
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        final byte[] encryptedPassword = Base64.decode(sharedPreferences.getString("password", null), Base64.DEFAULT);
+        final byte[] encryptedPassword = Base64.decode(sharedPreferences.getString(address + "-pwd", null), Base64.DEFAULT);
 
         // decrypt password
         SecretKey key = new SecretKeySpec(getKeyStringFromNative().getBytes("UTF-8"), "AES");
