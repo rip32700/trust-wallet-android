@@ -2,6 +2,7 @@ package com.wallet.crypto.trust.controller;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Base64;
 
 import java.io.UnsupportedEncodingException;
@@ -31,8 +32,6 @@ import javax.crypto.spec.SecretKeySpec;
  */
 
 public final class PasswordManager {
-
-    public static final String MyPREFERENCES = "TrustWalletPrefs" ;
 
     /*
      * ============================
@@ -78,7 +77,7 @@ public final class PasswordManager {
         final byte[] encryptedPassword = encrypt(password, key, iv);
 
         // save in shared preferences
-        SharedPreferences sharedPreferences = context.getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("password", Base64.encodeToString(encryptedPassword, Base64.DEFAULT));
         editor.commit();
@@ -103,7 +102,7 @@ public final class PasswordManager {
             InvalidAlgorithmParameterException
     {
         // get password from SharedPrefs
-        SharedPreferences sharedPreferences = context.getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         final byte[] encryptedPassword = Base64.decode(sharedPreferences.getString("password", null), Base64.DEFAULT);
 
         // decrypt password
