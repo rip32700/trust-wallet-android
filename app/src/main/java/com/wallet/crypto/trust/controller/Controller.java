@@ -12,6 +12,9 @@ import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.wallet.crypto.trust.R;
 import com.wallet.crypto.trust.model.ESTransaction;
 import com.wallet.crypto.trust.model.ESTransactionListResponse;
@@ -21,7 +24,7 @@ import com.wallet.crypto.trust.views.AccountListActivity;
 import com.wallet.crypto.trust.views.CreateAccountActivity;
 import com.wallet.crypto.trust.views.ExportAccountActivity;
 import com.wallet.crypto.trust.views.ImportAccountActivity;
-import com.wallet.crypto.trust.views.ReceiveActivity;
+import com.wallet.crypto.trust.views.RequestActivity;
 import com.wallet.crypto.trust.views.SettingsActivity;
 import com.wallet.crypto.trust.views.TransactionListActivity;
 import com.wallet.crypto.trust.views.SendActivity;
@@ -191,7 +194,7 @@ public class Controller {
             List<Account> ksAccounts = mEtherStore.getAccounts();
 
             for (Account a: ksAccounts) {
-                mAccounts.add(new VMAccount(a.getAddress().getHex(), "0"));
+                mAccounts.add(new VMAccount(a.getAddress().getHex().toLowerCase(), "0"));
             }
         } catch (Exception e) {
             Log.e(TAG, e.toString());
@@ -263,7 +266,7 @@ public class Controller {
     }
 
     public void navigateToReceive(Context context) {
-        Intent intent = new Intent(context, ReceiveActivity.class);
+        Intent intent = new Intent(context, RequestActivity.class);
         context.startActivity(intent);
     }
 
@@ -291,6 +294,19 @@ public class Controller {
 
     public void clickImport(String keystore, String password, OnTaskCompleted listener) {
         Log.d(TAG, String.format("Import account %s", keystore));
+        try {
+            JsonElement el = new JsonParser().parse(keystore);
+            JsonObject obj = el.getAsJsonObject();
+            String address = obj.get("address").getAsString();
+            Log.d(TAG, "address : " + address);
+            if (mEtherStore.hasAddress("0x" + address)) {
+                listener.onTaskCompleted(new TaskResult(TaskStatus.FAILURE, getString(R.string.account_already_imported)));
+                return;
+            }
+        } catch (Exception e) {
+            listener.onTaskCompleted(new TaskResult(TaskStatus.FAILURE, getString(R.string.error_import) + ": " + e.getMessage()));
+            return;
+        }
         new ImportAccountTask(keystore, password, listener).execute();
     }
 
